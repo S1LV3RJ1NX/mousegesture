@@ -2,11 +2,13 @@ import cv2
 import numpy as np
 import pyautogui
 
+kernel = np.ones((7,7),np.uint8)
+
 def nothing(x):
     pass
 
 def calibration(colourName, Range, cap):
-    kernel = np.ones((7,7),np.uint8)
+
     name = 'Calibrate' + colourName
     cv2.namedWindow(name)
 
@@ -45,3 +47,14 @@ def calibration(colourName, Range, cap):
         if k == ord(' '):
             cv2.destroyWindow(name)
             return np.array([[hue-20, sat, val], [hue+10, 255, 255]])
+
+def createMask(frame, colorRng):
+    '''cv2.inrange is used to filter out specific color then it
+    undergoes erosion and dilation to generate mask'''
+
+    mask = cv2.inRange(frame, colorRng[0], colorRng[1])
+    # Morphosis
+    erosion = cv2.erode(mask, kernel, iterations=1)
+    dilation = cv2.dilate(erosion, kernel, iterations=1)
+
+    return dilation

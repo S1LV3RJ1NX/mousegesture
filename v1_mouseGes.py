@@ -38,6 +38,7 @@ def changeStatus(key):
         print("           Press D for default settings")
         print("=======================================================")
 
+        # Calibration function present in functions.py
         yellow = calibration('Yellow', yellow, cap)
         blue = calibration('Blue', blue, cap)
         red = calibration('Red', red, cap)
@@ -55,6 +56,7 @@ print("           Press D for default settings")
 print("=======================================================")
 
 # Calibration ranges so as to detect only 3 colours
+# Calibration function present in functions.py
 yellow = calibration('Yellow', yellow, cap)
 blue = calibration('Blue', blue, cap)
 red = calibration('Red', red, cap)
@@ -73,6 +75,22 @@ while True:
     key = cv2.waitKey(10) & 0xFF
     # Checking status based on key pressed
     changeStatus(key)
+
+    '''Now we are going to capture video flip it as what we get
+    from input is reversed frame then based on color ranges
+    calibrated we are going to prepare mask for respective colors'''
+
+    _, source = cap.read()
+    frame = cv2.flip(source, 1)
+    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+
+    b_mask = createMask(hsv, blue)
+    r_mask = createMask(hsv, red)
+    y_mask = createMask(hsv, yellow)
+
+    cv2.imshow('Frame', frame)
+
+
 
     if key == 27:
         break
