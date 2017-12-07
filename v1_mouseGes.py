@@ -4,9 +4,14 @@ from functions import *
 
 
 # Defining default ranges for colour values
-blue = np.array([[88,78,20],[128,255,255]])
-yellow = np.array([[21,70,80],[61,255,255]])
-red = np.array([[154, 85, 72],[185, 255, 255]])
+blue = np.array([[85,69,36],[128,255,255]])#  108,78,20-->105,69,36
+yellow = np.array([[11,70,80],[61,255,255]])# 41,70,80--> 31,70,80
+red = np.array([[155, 82, 72],[185, 255, 255]])# 174,85,72--> 175,82,58
+
+# Area ranges for contours of different colours to be detected
+r_area = [100,1300]
+b_area = [100,1300]
+y_area = [100,1300]
 
 # Status variables
 perform = False
@@ -49,7 +54,7 @@ def changeStatus(key):
 
 # Begin
 cap = cv2.VideoCapture(0)
-print("=======================================================")
+'''print("=======================================================")
 print("              In calibration mode.")
 print(" Use trackbars to calibrate press space when done")
 print("           Press D for default settings")
@@ -59,7 +64,7 @@ print("=======================================================")
 # Calibration function present in functions.py
 yellow = calibration('Yellow', yellow, cap)
 blue = calibration('Blue', blue, cap)
-red = calibration('Red', red, cap)
+red = calibration('Red', red, cap)'''
 print("Calibration Successfull!!")
 
 cv2.namedWindow('Frame')
@@ -87,6 +92,14 @@ while True:
     b_mask = createMask(hsv, blue)
     r_mask = createMask(hsv, red)
     y_mask = createMask(hsv, yellow)
+
+    b_cen = drawCentroid( frame, b_area, b_mask, showCentroid)
+    r_cen = drawCentroid( frame, r_area, r_mask, showCentroid)
+    y_cen = drawCentroid( frame, y_area, y_mask, showCentroid)
+
+    '''cv2.drawContours(frame, b_cen, -1, (0,255,0), 5)
+    cv2.drawContours(frame, r_cen, -1, (0,255,0), 5)
+    cv2.drawContours(frame, y_cen, -1, (0,255,0), 5)'''
 
     cv2.imshow('Frame', frame)
 
