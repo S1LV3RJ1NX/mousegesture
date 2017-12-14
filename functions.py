@@ -7,6 +7,11 @@ kernel = np.ones((7,7),np.uint8)
 def nothing(x):
 	pass
 
+# Distance between two centroids
+def distance( c1, c2):
+	distance = pow( pow(c1[0]-c2[0],2) + pow(c1[1]-c2[1],2) , 0.5)
+	return distance
+
 def calibration(colourName, Range, cap):
 
 	name = 'Calibrate' + colourName
@@ -65,7 +70,22 @@ def swap(array, i):
 	array[0] = temp
 
 def drawCentroid(frame, colorArea, mask, showCentroid):
+
+	'''The cv2.findContours() method returns three values, as a tuple; in this case,
+	we are choosing to ignore the first and third return value. The first parameter is an
+	intermediate image that is produced during the contour-finding process. We are
+	not interested in that image in this application, so we effectively discard
+	that image by placing the underscore (_) in the place of the first return value.
+	The second return value is a list of NumPy arrays. Each array holds the points
+	for one contour in the image. So, if we have executed our strategy correctly,
+	the number of contours – the length of the contours list – will be the number of
+	objects in the image. The final return value is a NumPy array that contains
+	hierarchy information about the contours. This is also not useful so we shall  discard
+	it with _'''
+
 	_, contour, _ = cv2.findContours( mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+	# gives size of contour
 	l = len(contour)
 	area = np.zeros(l)
 
@@ -85,8 +105,20 @@ def drawCentroid(frame, colorArea, mask, showCentroid):
 			swap( contour, i)
 
 	if l > 0:
+		'''Once we have the contours, we can use them to get the moments
+		for the corresponding objects in the image. The moments of an object
+		are weighted averages of pixel intensities, or functions upon those averages'''
+
 		# Finding centroid using method of moments
 		M = cv2.moments(contour[0])
+
+		'''The cv2.moments() method call computes the moments for a contour.
+		The return value of the method call is a Python dictionary that contains
+		the various moments for the contour. The centroid, or center point, for a
+		contour can be found by dividing specific moments, as shown in the code.
+		We truncate the results of the divisions to integers, and save the
+		coordinates of the center point in the cx and cy variables.'''
+
 		if M['m00'] != 0:
 			cx = int(M['m10']/M['m00'])
 			cy = int(M['m01']/M['m00'])
@@ -100,3 +132,53 @@ def drawCentroid(frame, colorArea, mask, showCentroid):
 	else:
 		#return error handling values
 		return(-1,-1)
+
+'''
+This function calculates new cursor pos in such a way that mean deviation
+for desired state is reduced. i.e, if difference is less than 5 px then it
+is probably due to noise taken by webcam else it is delibrate movement.
+'''
+def setCursor(yCenter, Yprev):
+	yp = np.zeros(2)
+
+	if abs(yCenter[0] - Yprev[0]) < 5 and abs(yCenter[1] - Yprev[1])<5:
+		yp[0] = yCenter[0] + 0.7*(Yprev[0]-yCenter[0])
+		yp[1] = yCenter[1] + 0.7*(Yprev[1]-yCenter[1])
+	else:
+		yp[0] = yCenter[0] + 0.1*(Yprev[0]-yCenter[0])
+		yp[1] = yCenter[1] + 0.1*(Yprev[1]-yCenter[1])
+
+	return yp
+
+'''
+Depending upon the relative pos of 3 centroids this fuction chooses
+the desired mouse action. Refer pic of mouse actions for better understanding
+'''
+def chooseAction(yp, rc, bc):
+	out = np.array(['move', 'false'])
+
+	if rc[0]!=-1  and bc[0]!=-1:
+		if distance(yp, rc)<50 and distance(yp,bc)<50 and distance(rc,bc)<50:
+			# all centroids are close to one another
+			out[0] = 'drag'
+			out[1] = 'true'
+			return out
+		elif distance(rc,bc)<40:
+			out[0] = 'left'
+			return out
+		elif distance(yp,rc)<40:
+			out[0] = 'right'
+			return out
+		elif distance(yp,rc)>40 and rc[1]-bc[1]>120:
+			out[0] = 'down'
+			return out
+		elif bc[1]-rc[1]>110:
+			out[0] = 'up'
+			return out
+		else:
+			return out
+	else:
+		out[0] = -1
+		return out
+
+def performAction(yp, rc, bc, action, drag, perform):

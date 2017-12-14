@@ -13,6 +13,10 @@ r_area = [100,1300]
 b_area = [100,1300]
 y_area = [100,1300]
 
+# Prior initialization of all centers
+b_cen, y_pos, r_cen = [240,320],[240,320],[240,320]
+cursor = [960,540]
+
 # Status variables
 perform = False
 showCentroid = False
@@ -100,6 +104,16 @@ while True:
     '''cv2.drawContours(frame, b_cen, -1, (0,255,0), 5)
     cv2.drawContours(frame, r_cen, -1, (0,255,0), 5)
     cv2.drawContours(frame, y_cen, -1, (0,255,0), 5)'''
+
+    Yprev = y_pos
+
+    if Yprev[0]!=-1 and y_cen[0]!=-1 and y_pos[0]!=-1:
+        y_pos = setCursor(y_cen, Yprev)
+
+    output = chooseAction(y_pos, r_cen, b_cen)
+    if output[0]!=-1:
+        performAction(y_pos, r_cen, b_cen, output[0], output[1], perform)
+
 
     cv2.imshow('Frame', frame)
 
