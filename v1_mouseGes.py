@@ -9,9 +9,9 @@ yellow = np.array([[11,70,80],[61,255,255]])# 41,70,80--> 31,70,80
 red = np.array([[155, 82, 72],[185, 255, 255]])# 174,85,72--> 175,82,58
 
 # Area ranges for contours of different colours to be detected
-r_area = [100,1300]
-b_area = [100,1300]
-y_area = [100,1300]
+r_area = [100,1500]
+b_area = [100,1500]
+y_area = [100,1700]
 
 # Prior initialization of all centers
 b_cen, y_pos, r_cen = [240,320],[240,320],[240,320]
@@ -55,10 +55,102 @@ def changeStatus(key):
     else:
         pass
 
+def performAction(yp, rc, bc, action, drag, perform):
+	if perform:
+		cursor[0] = 4*(yp[0]-110)
+		cursor[1] = 4*(yp[1]-100)
+		if action == 'move':
+			# if within boundary of frame go to respective cursor coordinates
+			if yp[0]>110 and yp[0]<560 and yp[1]>110 and yp[1]<420:
+				pyautogui.moveTo(cursor[0],cursor[1])
+
+			# if on left edge
+			elif yp[0]<110 and yp[1]>110 and yp[1]<420:
+				pyautogui.moveTo( 8 , cursor[1])
+
+			# if on right edge
+			elif yp[0]>560 and yp[1]>110 and yp[1]<420:
+				pyautogui.moveTo(1912, cursor[1])
+
+			# if on top edge
+			elif yp[0]>110 and yp[0]<560 and yp[1]<110:
+				pyautogui.moveTo(cursor[0] , 8)
+
+			# if on bottom edge
+			elif yp[0]>110 and yp[0]<560 and yp[1]>420:
+				pyautogui.moveTo(cursor[0] , 1072)
+
+			# top left corner
+			elif yp[0]<110 and yp[1]<110:
+				pyautogui.moveTo(8, 8)
+
+			# bottom left corner
+			elif yp[0]<110 and yp[1]>420:
+				pyautogui.moveTo(8, 1072)
+
+			# bottom right corner
+			elif yp[0]>560 and yp[1]>420:
+				pyautogui.moveTo(1912, 1072)
+
+			# top right corner
+			else:
+				pyautogui.moveTo(1912, 8)
+
+		elif action == 'left':
+			pyautogui.click(button = 'left')
+			time.sleep(0.3)
+
+		elif action == 'right':
+			pyautogui.click(button = 'right')
+			time.sleep(0.3)
+
+		elif action == 'up':
+			pyautogui.scroll(5)
+
+		elif action == 'down':
+			pyautogui.scroll(-5)
+
+		elif action == 'drag' and drag == 'true':
+			global y_pos
+			drag = 'false'
+			pyautogui.mouseDown()
+
+			while(1):
+
+				k = cv2.waitKey(10) & 0xFF
+				changeStatus(k)
+
+				_, frameinv = cap.read()
+				# flip horizontaly to get mirror image in camera
+				frame = cv2.flip( frameinv, 1)
+
+				hsv = cv2.cvtColor( frame, cv2.COLOR_BGR2HSV)
+
+				b_mask = makeMask( hsv, blue_range)
+				r_mask = makeMask( hsv, red_range)
+				y_mask = makeMask( hsv, yellow_range)
+
+				py_pos = y_pos
+
+				b_cen = drawCentroid( frame, b_area, b_mask, showCentroid)
+				r_cen = drawCentroid( frame, r_area, r_mask, showCentroid)
+				y_cen = drawCentroid( frame, y_area, y_mask, showCentroid)
+
+				if 	py_pos[0]!=-1 and y_cen[0]!=-1:
+					y_pos = setCursorPos(y_cen, py_pos)
+
+				performAction(y_pos, r_cen, b_cen, 'move', drag, perform)
+				cv2.imshow('Frame', frame)
+
+				# if fingers go far apart i.e, drag action stops then end
+				if distance(y_pos,r_cen)>60 or distance(y_pos,b_cen)>60 or distance(r_cen,b_cen)>60:
+					break
+
+			pyautogui.mouseUp()
 
 # Begin
 cap = cv2.VideoCapture(0)
-'''print("=======================================================")
+print("=======================================================")
 print("              In calibration mode.")
 print(" Use trackbars to calibrate press space when done")
 print("           Press D for default settings")
@@ -68,7 +160,7 @@ print("=======================================================")
 # Calibration function present in functions.py
 yellow = calibration('Yellow', yellow, cap)
 blue = calibration('Blue', blue, cap)
-red = calibration('Red', red, cap)'''
+red = calibration('Red', red, cap)
 print("Calibration Successfull!!")
 
 cv2.namedWindow('Frame')
@@ -114,10 +206,7 @@ while True:
     if output[0]!=-1:
         performAction(y_pos, r_cen, b_cen, output[0], output[1], perform)
 
-
     cv2.imshow('Frame', frame)
-
-
 
     if key == 27:
         break

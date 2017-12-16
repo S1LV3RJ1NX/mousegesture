@@ -1,8 +1,10 @@
 import cv2
 import numpy as np
 import pyautogui
+import time
 
 kernel = np.ones((7,7),np.uint8)
+cursor = [960,540]
 
 def nothing(x):
 	pass
@@ -142,11 +144,11 @@ def setCursor(yCenter, Yprev):
 	yp = np.zeros(2)
 
 	if abs(yCenter[0] - Yprev[0]) < 5 and abs(yCenter[1] - Yprev[1])<5:
-		yp[0] = yCenter[0] + 0.7*(Yprev[0]-yCenter[0])
-		yp[1] = yCenter[1] + 0.7*(Yprev[1]-yCenter[1])
+		yp[0] = yCenter[0] + 0.9*(Yprev[0]-yCenter[0])
+		yp[1] = yCenter[1] + 0.9*(Yprev[1]-yCenter[1])
 	else:
-		yp[0] = yCenter[0] + 0.1*(Yprev[0]-yCenter[0])
-		yp[1] = yCenter[1] + 0.1*(Yprev[1]-yCenter[1])
+		yp[0] = yCenter[0] + 0.2*(Yprev[0]-yCenter[0])
+		yp[1] = yCenter[1] + 0.2*(Yprev[1]-yCenter[1])
 
 	return yp
 
@@ -169,10 +171,10 @@ def chooseAction(yp, rc, bc):
 		elif distance(yp,rc)<40:
 			out[0] = 'right'
 			return out
-		elif distance(yp,rc)>40 and rc[1]-bc[1]>120:
+		elif distance(yp,rc)>40 and rc[1]-bc[1]>150:
 			out[0] = 'down'
 			return out
-		elif bc[1]-rc[1]>110:
+		elif bc[1]-rc[1]>150:
 			out[0] = 'up'
 			return out
 		else:
@@ -180,5 +182,3 @@ def chooseAction(yp, rc, bc):
 	else:
 		out[0] = -1
 		return out
-
-def performAction(yp, rc, bc, action, drag, perform):
