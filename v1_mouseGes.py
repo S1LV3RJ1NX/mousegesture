@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 from functions import *
-
+import os
 
 # Defining default ranges for colour values
 blue = np.array([[85,69,36],[128,255,255]])#  108,78,20-->105,69,36
@@ -41,7 +41,6 @@ def changeStatus(key):
             print("Not showing Centroid")
 
     elif key == ord('r'):
-        print("=======================================================")
         print("              In recalibration mode.")
         print(" Use trackbars to calibrate press space when done")
         print("           Press D for default settings")
@@ -58,7 +57,7 @@ def changeStatus(key):
 def performAction(yp, rc, bc, action, drag, perform):
 	if perform:
 		cursor[0] = 4*(yp[0]-110)
-		cursor[1] = 4*(yp[1]-100)
+		cursor[1] = 4*(yp[1]-110)
 		if action == 'move':
 			# if within boundary of frame go to respective cursor coordinates
 			if yp[0]>110 and yp[0]<560 and yp[1]>110 and yp[1]<420:
@@ -97,8 +96,8 @@ def performAction(yp, rc, bc, action, drag, perform):
 				pyautogui.moveTo(1912, 8)
 
 		elif action == 'left':
-			pyautogui.click(button = 'left')
-			time.sleep(0.3)
+			pyautogui.click(button = 'left')			
+			#time.sleep(0.3)
 
 		elif action == 'right':
 			pyautogui.click(button = 'right')
@@ -109,6 +108,11 @@ def performAction(yp, rc, bc, action, drag, perform):
 
 		elif action == 'down':
 			pyautogui.scroll(-5)
+
+		elif action == 'SS':
+			os.system("gnome-screenshot --file=image.png")
+			time.sleep(0.3)
+
 
 		elif action == 'drag' and drag == 'true':
 			global y_pos
@@ -172,7 +176,7 @@ print("     press R to recalibrate")
 print("     Press ESC to exit")
 print("=========================================================")
 
-while True:
+while (1):
     key = cv2.waitKey(10) & 0xFF
     # Checking status based on key pressed
     changeStatus(key)
