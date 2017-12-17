@@ -20,39 +20,48 @@ cursor = [960,540]
 # Status variables
 perform = False
 showCentroid = False
+showContour = False
 
 def changeStatus(key):
-    global perform
-    global showCentroid
-    global yellow, red, blue
+		global perform
+		global showCentroid
+		global showContour
+		global yellow, red, blue
 
-    if key == ord('p'):
-        perform = not perform
-        if perform:
-            print("Mouse simulation ON..")
-        else:
-            print("Mouse simulation OFF")
+		if key == ord('p'):
+				perform = not perform
+				if perform:
+						print("Mouse simulation ON..")
+				else:
+						print("Mouse simulation OFF")
 
-    elif key == ord('c'):
-        showCentroid = not showCentroid
-        if showCentroid:
-            print("Showing Cenroid")
-        else:
-            print("Not showing Centroid")
+		elif key == ord('c'):
+				showCentroid = not showCentroid
+				if showCentroid:
+						print("Showing Cenroid")
+				else:
+						print("Not showing Centroid")
 
-    elif key == ord('r'):
-        print("              In recalibration mode.")
-        print(" Use trackbars to calibrate press space when done")
-        print("           Press D for default settings")
-        print("=======================================================")
+		elif key == ord('r'):
+				print("              In recalibration mode.")
+				print(" Use trackbars to calibrate press space when done")
+				print("           Press D for default settings")
+				print("=======================================================")
 
-        # Calibration function present in functions.py
-        yellow = calibration('Yellow', yellow, cap)
-        blue = calibration('Blue', blue, cap)
-        red = calibration('Red', red, cap)
+				# Calibration function present in functions.py
+				yellow = calibration('Yellow', yellow, cap)
+				blue = calibration('Blue', blue, cap)
+				red = calibration('Red', red, cap)
 
-    else:
-        pass
+		elif key == ord('d'):
+				showContour = not showContour
+				if showContour:
+						print("Showing Contours")
+				else:
+						print("Not showing Contours")
+
+		else:
+			pass
 
 def performAction(yp, rc, bc, action, drag, perform):
 	if perform:
@@ -96,7 +105,7 @@ def performAction(yp, rc, bc, action, drag, perform):
 				pyautogui.moveTo(1912, 8)
 
 		elif action == 'left':
-			pyautogui.click(button = 'left')			
+			pyautogui.click(button = 'left')
 			#time.sleep(0.3)
 
 		elif action == 'right':
@@ -130,18 +139,18 @@ def performAction(yp, rc, bc, action, drag, perform):
 
 				hsv = cv2.cvtColor( frame, cv2.COLOR_BGR2HSV)
 
-				b_mask = makeMask( hsv, blue_range)
-				r_mask = makeMask( hsv, red_range)
-				y_mask = makeMask( hsv, yellow_range)
+				b_mask = createMask( hsv, blue)
+				r_mask = createMask( hsv, red)
+				y_mask = createMask( hsv, yellow)
 
-				py_pos = y_pos
+				Yprev = y_pos
 
-				b_cen = drawCentroid( frame, b_area, b_mask, showCentroid)
-				r_cen = drawCentroid( frame, r_area, r_mask, showCentroid)
-				y_cen = drawCentroid( frame, y_area, y_mask, showCentroid)
+				b_cen = drawCentroid( frame, b_area, b_mask, showCentroid, showContour)
+				r_cen = drawCentroid( frame, r_area, r_mask, showCentroid, showContour)
+				y_cen = drawCentroid( frame, y_area, y_mask, showCentroid, showContour)
 
-				if 	py_pos[0]!=-1 and y_cen[0]!=-1:
-					y_pos = setCursorPos(y_cen, py_pos)
+				if 	Yprev[0]!=-1 and y_cen[0]!=-1:
+					y_pos = setCursor(y_cen, Yprev)
 
 				performAction(y_pos, r_cen, b_cen, 'move', drag, perform)
 				cv2.imshow('Frame', frame)
@@ -173,6 +182,7 @@ print("=========================================================")
 print("     press P to turn ON and OFF mouse control")
 print("     press C to display centroid of various colours")
 print("     press R to recalibrate")
+print("     press D to show contours")
 print("     Press ESC to exit")
 print("=========================================================")
 
@@ -193,9 +203,9 @@ while (1):
     r_mask = createMask(hsv, red)
     y_mask = createMask(hsv, yellow)
 
-    b_cen = drawCentroid( frame, b_area, b_mask, showCentroid)
-    r_cen = drawCentroid( frame, r_area, r_mask, showCentroid)
-    y_cen = drawCentroid( frame, y_area, y_mask, showCentroid)
+    b_cen = drawCentroid( frame, b_area, b_mask, showCentroid, showContour)
+    r_cen = drawCentroid( frame, r_area, r_mask, showCentroid, showContour)
+    y_cen = drawCentroid( frame, y_area, y_mask, showCentroid, showContour)
 
     '''cv2.drawContours(frame, b_cen, -1, (0,255,0), 5)
     cv2.drawContours(frame, r_cen, -1, (0,255,0), 5)

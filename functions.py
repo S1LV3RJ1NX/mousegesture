@@ -20,7 +20,7 @@ def calibration(colourName, Range, cap):
 	name = 'Calibrate' + colourName
 	cv2.namedWindow(name)
 
-	cv2.createTrackbar('Hue',name,Range[0][0]+20,180, nothing)
+	cv2.createTrackbar('Hue',name,Range[0][0]+20,230, nothing)
 	cv2.createTrackbar('Sat',name,Range[0][1],255, nothing)
 	cv2.createTrackbar('Val',name,Range[0][2],255, nothing)
 
@@ -62,17 +62,33 @@ def createMask(frame, colorRng):
 
 	mask = cv2.inRange(frame, colorRng[0], colorRng[1])
 	# Morphosis
-	erosion = cv2.erode(mask, kernel, iterations=1)
-	dilation = cv2.dilate(erosion, kernel, iterations=1)
+	'''
+	Erosion erodes aeay the boundaries of foreground object.A pixel in the original
+	image (either 1 or 0) will be considered 1 only if all the pixels under the kernel
+	is 1, otherwise it is eroded (made to zero).
 
-	return dilation
+	Dilation is opposite of erosion.Here, a pixel element is ‘1’ if atleast one pixel
+	under the kernel is ‘1’. So it increases the white region in the image or size of
+	foreground object increases.
+
+	Here erosion is followed by dilation since, erosion removes white noises but also shrinks
+	our object. So we dilate it. Since noise is gone it won't come back, but our object area
+	increases.
+
+	Here we shall use opening which is jst another erosion followed by dialation
+	'''
+
+	#erosion = cv2.erode(mask, kernel, iterations=1)
+	#dilation = cv2.dilate(erosion, kernel, iterations=1)
+	opening = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+
+	#return dilation
+	return opening
 
 def swap(array, i):
-	temp = array[i]
-	array[i] = array[0]
-	array[0] = temp
+	array[0],array[i] = array[i],array[0]
 
-def drawCentroid(frame, colorArea, mask, showCentroid):
+def drawCentroid(frame, colorArea, mask, showCentroid, showContour):
 
 	'''The cv2.findContours() method returns three values, as a tuple; in this case,
 	we are choosing to ignore the first and third return value. The first parameter is an
@@ -130,6 +146,9 @@ def drawCentroid(frame, colorArea, mask, showCentroid):
 			if showCentroid:
 				cv2.circle(frame, center, 5, (0,0,255), -1)
 
+			if showContour:
+				cv2.drawContours(frame, contour[0], -1, (0,255,0), 5)
+
 			return center
 
 	else:
@@ -161,8 +180,9 @@ def chooseAction(yp, rc, bc):
 	out = np.array(['move', 'false'])
 
 	if rc[0]!=-1  and bc[0]!=-1:
-		if distance(yp, rc)<50 and distance(yp,bc)<50 and distance(rc,bc)<50:
+		if distance(yp, rc)<50 and distance(yp,bc)<80 and distance(rc,bc)<50:
 			# all centroids are close to one another
+			#print(distance(yp, rc), distance(yp, bc), distance(rc, bc))
 			out[0] = 'drag'
 			out[1] = 'true'
 			return out
@@ -178,8 +198,9 @@ def chooseAction(yp, rc, bc):
 		elif bc[1]-rc[1]>110:
 			out[0] = 'up'
 			return out
-		elif distance(yp,bc)<40:
+		elif distance(yp,bc)<50 and abs(rc[1]-yp[1]) > 110:
 			out[0] = 'SS'
+			#print(out[0], distance(yp,bc),abs(rc[1]-yp[1]) )
 			return out
 		else:
 			return out
